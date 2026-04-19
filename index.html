@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voyage Architect</title>
+  <style>
+    :root {
+      --bg1: #06121f;
+      --bg2: #0f172a;
+      --bg3: #1e293b;
+      --glass: rgba(255,255,255,0.10);
+      --glass-2: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.14);
+      --text: rgba(255,255,255,0.95);
+      --muted: rgba(255,255,255,0.68);
+      --soft: rgba(255,255,255,0.52);
+      --dark: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.16), transparent 30%),
+        radial-gradient(circle at 80% 20%, rgba(167,139,250,0.18), transparent 25%),
+        linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.14;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--soft);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .shell, .card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+      backdrop-filter: blur(14px);
+    }
+
+    .shell { padding: 24px; }
+    .card { padding: 20px; }
+
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 12px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      font-size: clamp(30px, 4vw, 40px);
+      line-height: 1.05;
+      margin-bottom: 10px;
+      letter-spacing: -0.03em;
+    }
+    h2 { font-size: 22px; margin-bottom: 10px; }
+    h3 { font-size: 16px; margin-bottom: 8px; }
+    p { color: var(--muted); line-height: 1.65; }
+
+    .grid-4, .grid-3, .grid-days, .grid-slots {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-days { grid-template-columns: 1fr; }
+    .grid-slots { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.10);
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .btn, .pill, .chip, .activity-btn {
+      border-radius: 18px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      cursor: pointer;
+      transition: 160ms ease;
+      font: inherit;
+    }
+
+    .btn:hover, .pill:hover, .chip:hover, .activity-btn:hover { transform: translateY(-1px); }
+    .btn.primary {
+      background: white;
+      color: var(--dark);
+      border-color: transparent;
+      font-weight: 700;
+    }
+    .btn.ghost {
+      background: rgba(255,255,255,0.08);
+      color: white;
+    }
+    .btn.small { padding: 8px 12px; border-radius: 14px; font-size: 14px; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .left-actions, .right-actions, .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--soft);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      height: 10px;
+      background: rgba(255,255,255,0.10);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: white;
+      transition: width 220ms ease;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .option-card, .activity-btn {
+      text-align: left;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 16px;
+    }
+
+    .selected {
+      background: rgba(255,255,255,0.18) !important;
+      border-color: rgba(255,255,255,0.42) !important;
+    }
+
+    .slider-wrap { margin-top: 14px; }
+    input[type="range"] { width: 100%; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      padding: 14px 16px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea { min-height: 220px; resize: vertical; }
+    input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.38); }
+
+    .count-card { text-align: center; }
+    .count-value {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1;
+      margin: 12px 0;
+    }
+
+    .muted { color: var(--muted); }
+    .soft { color: var(--soft); }
+    .hidden { display: none !important; }
+
+    .planner-wrap {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 18px;
+    }
+
+    .library {
+      max-height: 72vh;
+      overflow: auto;
+    }
+
+    .library-item, .planner-item, .slot {
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .library-item {
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .library-item .meta, .planner-item .meta, .slot .empty {
+      color: var(--soft);
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .slot {
+      padding: 14px;
+      background: rgba(255,255,255,0.05);
+      border-style: dashed;
+      min-height: 150px;
+    }
+
+    .slot-title {
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .planner-item {
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .planner-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 2px 4px;
+      font-size: 16px;
+    }
+
+    .mini-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #dbeafe;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .summary-box {
+      border-radius: 22px;
+      padding: 18px;
+      background: rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .packing-list {
+      display: grid;
+      gap: 8px;
+      max-height: 300px;
+      overflow: auto;
+    }
+
+    .packing-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: rgba(255,255,255,0.84);
+      font-size: 14px;
+    }
+
+    .packing-cat {
+      margin-left: auto;
+      color: rgba(255,255,255,0.45);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .planner-wrap { grid-template-columns: 1fr; }
+      .library { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>
+        <div class="title">Voyage Architect</div>
+        <div class="subtitle">Single-file holiday planner for GitHub Pages</div>
+      </div>
+      <button id="resetTopBtn" class="btn ghost">Reset</button>
+    </div>
+
+    <div class="shell">
+      <div id="surveyView">
+        <div class="progress-row">
+          <span id="progressText">Step 1 of 9</span>
+          <span id="progressPct">11%</span>
+        </div>
+        <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+        <div id="surveyContent"></div>
+        <div class="controls">
+          <div class="left-actions">
+            <button id="backBtn" class="btn ghost">Back</button>
+          </div>
+          <div class="right-actions">
+            <button id="nextBtn" class="btn primary">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="plannerView" class="hidden"></div>
+      <div id="dashboardView" class="hidden"></div>
+    </div>
+  </div>
+
+  <script>
+    const destinationOptions = [
+      "Japan", "Thailand", "Italy", "New Zealand", "Australia",
+      "United Kingdom", "UK", "USA", "China", "France",
+      "South Korea", "Canada", "Custom"
+    ];
+
+    const activityOptions = [
+      {
+        category: "Adventure activities",
+        items: [
+          { id: "hiking", label: "Hiking" },
+          { id: "watersports", label: "Water sports" },
+          { id: "themeparks", label: "Theme parks" },
+          { id: "outdoor_adventure", label: "Outdoor adventures" },
+        ],
+      },
+      {
+        category: "Fun activities",
+        items: [
+          { id: "food", label: "Food experiences" },
+          { id: "shopping", label: "Shopping" },
+          { id: "relax", label: "Relaxation" },
+          { id: "family_fun", label: "Family fun" },
+          { id: "travel", label: "Travel" },
+          { id: "nature", label: "Nature" },
+        ],
+      },
+      {
+        category: "History and culture",
+        items: [
+          { id: "museums", label: "Museums" },
+          { id: "history", label: "History" },
+          { id: "culture", label: "Culture" },
+          { id: "religious_sites", label: "Religious sites" },
+        ],
+      },
+    ];
+
+    const allActivities = activityOptions.flatMap(group => group.items);
+
+    const vibeOptions = [
+      {
+        id: "religious",
+        title: "More religious / cultural",
+        desc: "Temples, churches, shrines, traditions, and heritage.",
+      },
+      {
+        id: "balanced",
+        title: "Balanced mix",
+        desc: "A blend of sightseeing, food, relaxing, and activities.",
+      },
+      {
+        id: "activity",
+        title: "More activity-based",
+        desc: "Adventure, movement, exploring, and packed days.",
+      },
+    ];
+
+    const questionOrder = [
+      "destination", "days", "budget", "group", "activities",
+      "vibe", "intensity", "notes", "summary"
+    ];
+
+    const plannerSlots = [
+      { key: "breakfast", label: "Breakfast" },
+      { key: "morning", label: "Morning" },
+      { key: "lunch", label: "Lunch" },
+      { key: "afternoon", label: "Afternoon" },
+      { key: "dinner", label: "Dinner" },
+      { key: "evening", label: "Evening" },
+      { key: "relax", label: "Relax" },
+    ];
+
+    const librarySeed = [
+      { id: "lib-1", title: "Breakfast cafe", slot: "breakfast", duration: 30, tags: ["food", "morning", "cafe"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-2", title: "Hotel breakfast", slot: "breakfast", duration: 20, tags: ["food", "easy"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-3", title: "Bakery stop", slot: "breakfast", duration: 15, tags: ["food", "quick"], cost: "low", intensity: "low", familyScore: 8 },
+      { id: "lib-4", title: "Temple visit", slot: "morning", duration: 45, tags: ["culture", "history", "religious"], cost: "low", intensity: "low", destinations: ["Japan", "Thailand", "Italy"], familyScore: 7 },
+      { id: "lib-5", title: "Shrine walk", slot: "morning", duration: 30, tags: ["culture", "religious"], cost: "low", intensity: "low", destinations: ["Japan"], familyScore: 7 },
+      { id: "lib-6", title: "Nature walk", slot: "morning", duration: 40, tags: ["nature", "outdoors"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-7", title: "Botanical garden", slot: "morning", duration: 50, tags: ["nature", "garden"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-8", title: "Hiking trail", slot: "morning", duration: 60, tags: ["adventure", "nature"], cost: "low", intensity: "high", familyScore: 6 },
+      { id: "lib-9", title: "Bike ride", slot: "morning", duration: 45, tags: ["adventure", "active"], cost: "mid", intensity: "mid", familyScore: 8 },
+      { id: "lib-10", title: "Museum stop", slot: "afternoon", duration: 60, tags: ["museum", "history"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-11", title: "History tour", slot: "afternoon", duration: 60, tags: ["history", "guide"], cost: "mid", intensity: "mid", familyScore: 7 },
+      { id: "lib-12", title: "Art gallery", slot: "afternoon", duration: 45, tags: ["culture", "art"], cost: "mid", intensity: "low", familyScore: 7 },
+      { id: "lib-13", title: "Castle visit", slot: "afternoon", duration: 75, tags: ["history", "landmark"], cost: "mid", intensity: "mid", destinations: ["United Kingdom", "France", "Italy", "UK"], familyScore: 7 },
+      { id: "lib-14", title: "Old town stroll", slot: "afternoon", duration: 40, tags: ["history", "walking"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-15", title: "Street food tour", slot: "lunch", duration: 15, tags: ["food", "tour"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-16", title: "Lunch booking", slot: "lunch", duration: 45, tags: ["food", "restaurant"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-17", title: "Picnic lunch", slot: "lunch", duration: 35, tags: ["food", "nature"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-18", title: "Train journey", slot: "afternoon", duration: 60, tags: ["travel", "transport"], cost: "mid", intensity: "mid", destinations: ["Japan", "United Kingdom", "France", "Italy", "UK", "China"], familyScore: 8 },
+      { id: "lib-19", title: "Scenic drive", slot: "afternoon", duration: 90, tags: ["travel", "roadtrip"], cost: "mid", intensity: "mid", destinations: ["New Zealand", "Australia", "Canada", "USA"], familyScore: 8 },
+      { id: "lib-20", title: "Ferry ride", slot: "afternoon", duration: 45, tags: ["travel", "water"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-21", title: "Cable car ride", slot: "afternoon", duration: 25, tags: ["travel", "views"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-22", title: "Beach time", slot: "afternoon", duration: 60, tags: ["nature", "relax", "beach"], cost: "low", intensity: "low", destinations: ["Thailand", "Australia", "Italy", "France", "USA"], familyScore: 9 },
+      { id: "lib-23", title: "Swimming break", slot: "afternoon", duration: 40, tags: ["fun", "water"], cost: "low", intensity: "mid", familyScore: 9 },
+      { id: "lib-24", title: "Shopping street", slot: "afternoon", duration: 50, tags: ["shopping", "fun"], cost: "mid", intensity: "low", familyScore: 7 },
+      { id: "lib-25", title: "Souvenir hunt", slot: "afternoon", duration: 30, tags: ["shopping", "fun"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-26", title: "Theme park ride", slot: "afternoon", duration: 35, tags: ["fun", "adventure"], cost: "high", intensity: "high", familyScore: 9 },
+      { id: "lib-27", title: "Zoo visit", slot: "afternoon", duration: 75, tags: ["family", "animals"], cost: "mid", intensity: "mid", familyScore: 10 },
+      { id: "lib-28", title: "Aquarium visit", slot: "afternoon", duration: 60, tags: ["family", "animals"], cost: "mid", intensity: "low", familyScore: 10 },
+      { id: "lib-29", title: "Photography stop", slot: "morning", duration: 20, tags: ["nature", "views", "photo"], cost: "low", intensity: "low", familyScore: 8 },
+      { id: "lib-30", title: "Coffee break", slot: "relax", duration: 20, tags: ["relax", "food"], cost: "low", intensity: "low", familyScore: 8 },
+      { id: "lib-31", title: "Spa session", slot: "relax", duration: 60, tags: ["relax", "hotel", "luxury"], cost: "high", intensity: "low", familyScore: 6 },
+      { id: "lib-32", title: "Hotel chill", slot: "relax", duration: 30, tags: ["relax", "hotel"], cost: "low", intensity: "low", familyScore: 10 },
+      { id: "lib-33", title: "Nap / reset", slot: "relax", duration: 25, tags: ["relax", "easy"], cost: "low", intensity: "low", familyScore: 10 },
+      { id: "lib-34", title: "Dinner booking", slot: "dinner", duration: 60, tags: ["food", "evening"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-35", title: "Ramen dinner", slot: "dinner", duration: 45, tags: ["food", "japan"], cost: "mid", intensity: "low", destinations: ["Japan"], familyScore: 9 },
+      { id: "lib-36", title: "Seafood dinner", slot: "dinner", duration: 60, tags: ["food", "restaurant"], cost: "high", intensity: "low", familyScore: 8 },
+      { id: "lib-37", title: "Sunset viewpoint", slot: "evening", duration: 25, tags: ["nature", "views"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-38", title: "Night market", slot: "evening", duration: 60, tags: ["food", "shopping", "market"], cost: "low", intensity: "mid", familyScore: 10 },
+      { id: "lib-39", title: "Lantern walk", slot: "evening", duration: 30, tags: ["culture", "night"], cost: "low", intensity: "low", familyScore: 8 },
+      { id: "lib-40", title: "Live music", slot: "evening", duration: 45, tags: ["fun", "night"], cost: "mid", intensity: "low", familyScore: 7 },
+      { id: "lib-41", title: "Cooking class", slot: "afternoon", duration: 90, tags: ["food", "activity"], cost: "mid", intensity: "mid", familyScore: 8 },
+      { id: "lib-42", title: "Kayaking", slot: "morning", duration: 60, tags: ["adventure", "water"], cost: "mid", intensity: "high", familyScore: 7 },
+      { id: "lib-43", title: "Snorkeling", slot: "morning", duration: 75, tags: ["adventure", "water"], cost: "mid", intensity: "high", familyScore: 7 },
+      { id: "lib-44", title: "Farm visit", slot: "morning", duration: 45, tags: ["nature", "family"], cost: "mid", intensity: "low", familyScore: 9 },
+      { id: "lib-45", title: "Tea ceremony", slot: "afternoon", duration: 35, tags: ["culture", "japan"], cost: "mid", intensity: "low", destinations: ["Japan", "China"], familyScore: 8 },
+      { id: "lib-46", title: "Bookshop stop", slot: "afternoon", duration: 20, tags: ["relax", "shopping"], cost: "low", intensity: "low", familyScore: 8 },
+      { id: "lib-47", title: "River cruise", slot: "evening", duration: 50, tags: ["travel", "water"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-48", title: "Food hall visit", slot: "lunch", duration: 35, tags: ["food", "family"], cost: "mid", intensity: "low", familyScore: 9 },
+      { id: "lib-49", title: "Playground stop", slot: "afternoon", duration: 25, tags: ["family", "children"], cost: "low", intensity: "mid", familyScore: 10 },
+      { id: "lib-50", title: "Science museum", slot: "afternoon", duration: 60, tags: ["museum", "family"], cost: "mid", intensity: "low", familyScore: 10 },
+      { id: "lib-51", title: "Historic church", slot: "morning", duration: 30, tags: ["history", "religious"], cost: "low", intensity: "low", familyScore: 7 },
+      { id: "lib-52", title: "Mountain viewpoint", slot: "morning", duration: 40, tags: ["nature", "views"], cost: "low", intensity: "mid", familyScore: 8 },
+      { id: "lib-53", title: "Street performance", slot: "evening", duration: 20, tags: ["fun", "culture"], cost: "low", intensity: "low", familyScore: 8 },
+      { id: "lib-54", title: "Ice cream stop", slot: "relax", duration: 15, tags: ["food", "quick"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-55", title: "Market breakfast", slot: "breakfast", duration: 25, tags: ["food", "market"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-56", title: "Lakeside walk", slot: "morning", duration: 35, tags: ["nature", "relax"], cost: "low", intensity: "low", familyScore: 9 },
+      { id: "lib-57", title: "Boat tour", slot: "afternoon", duration: 70, tags: ["travel", "water"], cost: "mid", intensity: "low", familyScore: 8 },
+      { id: "lib-58", title: "Hot spring soak", slot: "relax", duration: 50, tags: ["relax", "nature"], cost: "mid", intensity: "low", destinations: ["Japan", "New Zealand", "China"], familyScore: 8 },
+      { id: "lib-59", title: "Dessert cafe", slot: "evening", duration: 30, tags: ["food", "relax", "cafe"], cost: "mid", intensity: "low", familyScore: 9 },
+      { id: "lib-60", title: "Sunrise photo stop", slot: "morning", duration: 20, tags: ["nature", "photo"], cost: "low", intensity: "low", familyScore: 8 },
+    ];
+
+    const initialData = {
+      destination: "Japan",
+      customDestination: "",
+      days: 7,
+      budget: 2500,
+      adults: 2,
+      children: 0,
+      teenagers: 1,
+      activities: ["food", "nature", "travel", "museums"],
+      vibe: "balanced",
+      intensity: 60,
+      notes: "I want good food, fun highlights, and a plan that is not too exhausting.",
+    };
+
+    const state = {
+      mode: "survey",
+      step: 0,
+      formData: structuredClone(initialData),
+      plannerDays: Array.from({ length: initialData.days }, () => createEmptyDayPlan()),
+      librarySearch: "",
+      packingList: buildPackingList(initialData.destination, initialData.activities, initialData.days),
+    };
+
+    function createEmptyDayPlan() {
+      return {
+        breakfast: [], morning: [], lunch: [], afternoon: [], dinner: [], evening: [], relax: []
+      };
+    }
+
+    function getActivityLabel(id) {
+      return allActivities.find(activity => activity.id === id)?.label ?? id;
+    }
+
+    function toTitleCase(text) {
+      return text.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
+    }
+
+    function recommendationLink(query) {
+      return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    }
+
+    function clampCount(value) {
+      return Math.max(0, Math.min(12, value));
+    }
+
+    function formatMinutes(minutes) {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    }
+
+    function getDayLoadLabel(minutes) {
+      if (minutes < 180) return { label: "Light day", hint: "Still roomy" };
+      if (minutes < 360) return { label: "Balanced day", hint: "Looks comfortable" };
+      if (minutes < 480) return { label: "Busy day", hint: "Getting packed" };
+      return { label: "Very full day", hint: "Maybe trim a few things" };
+    }
+
+    function buildPackingList(destination, activities, days) {
+      const base = [
+        { id: "p-1", label: "Passport / ID", packed: false, category: "Essentials" },
+        { id: "p-2", label: "Phone charger", packed: false, category: "Essentials" },
+        { id: "p-3", label: "Travel wallet", packed: false, category: "Essentials" },
+        { id: "p-4", label: "Toothbrush", packed: false, category: "Toiletries" },
+        { id: "p-5", label: "Socks", packed: false, category: "Clothing" },
+        { id: "p-6", label: "T-shirts", packed: false, category: "Clothing" },
+        { id: "p-7", label: `${Math.max(2, Math.ceil(days / 2))} outfits`, packed: false, category: "Clothing" },
+        { id: "p-8", label: "Comfortable shoes", packed: false, category: "Clothing" },
+      ];
+      const extras = [];
+      if (["Japan", "United Kingdom", "UK", "France", "Canada", "New Zealand", "China", "USA"].includes(destination)) {
+        extras.push({ id: "p-9", label: "Light jacket", packed: false, category: "Clothing" });
+      }
+      if (["Thailand", "Australia", "Italy", "France", "USA"].includes(destination)) {
+        extras.push({ id: "p-10", label: "Sun cream", packed: false, category: "Toiletries" });
+        extras.push({ id: "p-11", label: "Hat / cap", packed: false, category: "Clothing" });
+      }
+      if (activities.includes("watersports")) {
+        extras.push({ id: "p-12", label: "Swimwear", packed: false, category: "Activities" });
+        extras.push({ id: "p-13", label: "Quick dry towel", packed: false, category: "Activities" });
+      }
+      if (activities.includes("hiking") || activities.includes("nature")) {
+        extras.push({ id: "p-14", label: "Day backpack", packed: false, category: "Activities" });
+        extras.push({ id: "p-15", label: "Water bottle", packed: false, category: "Activities" });
+      }
+      if (activities.includes("museums") || activities.includes("culture")) {
+        extras.push({ id: "p-16", label: "Small notebook", packed: false, category: "Activities" });
+      }
+      return [...base, ...extras];
+    }
+
+    function selectedDestination() {
+      return state.formData.destination === "Custom"
+        ? (state.formData.customDestination || "Custom destination")
+        : state.formData.destination;
+    }
+
+    function selectedActivityLabels() {
+      return state.formData.activities.map(getActivityLabel).join(", ");
+    }
+
+    function summaryText() {
+      let pace = "balanced";
+      if (state.formData.intensity <= 35) pace = "quite relaxed";
+      if (state.formData.intensity >= 75) pace = "fast paced";
+      const totalTravelers = state.formData.adults + state.formData.children + state.formData.teenagers;
+      return `A ${state.formData.days} day trip to ${selectedDestination()} for ${totalTravelers} traveler${totalTravelers === 1 ? "" : "s"} with a budget of about $${state.formData.budget}. The plan leans ${state.formData.vibe}, includes ${selectedActivityLabels() || "a mix of activities"}, and has a ${pace} daily pace.`;
+    }
+
+    function smartLibrary() {
+      const budgetBand = state.formData.budget < 1600 ? "low" : state.formData.budget < 5000 ? "mid" : "high";
+      const intensityBand = state.formData.intensity < 40 ? "low" : state.formData.intensity < 75 ? "mid" : "high";
+      const familyWeight = state.formData.children + state.formData.teenagers > 0;
+      return librarySeed.filter(card => {
+        const destinationOk = !card.destinations || card.destinations.includes(selectedDestination());
+        if (!destinationOk) return false;
+        if (budgetBand === "low" && card.cost === "high") return false;
+        if (intensityBand === "low" && card.intensity === "high") return false;
+        if (state.formData.vibe === "religious" && card.tags.includes("adventure") && !card.tags.includes("nature")) return false;
+        if (state.formData.vibe === "activity" && card.tags.includes("religious") && !card.tags.includes("history")) return false;
+        if (familyWeight && (card.familyScore ?? 0) < 6) return false;
+        return true;
+      });
+    }
+
+    function finalLibrary() {
+      const q = state.librarySearch.trim().toLowerCase();
+      if (!q) return smartLibrary();
+      return smartLibrary().filter(card => {
+        const haystack = `${card.title} ${card.tags.join(" ")} ${card.slot}`.toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    function canContinue() {
+      const current = questionOrder[state.step];
+      if (current === "destination") {
+        if (state.formData.destination === "Custom") return state.formData.customDestination.trim().length > 1;
+        return Boolean(state.formData.destination);
+      }
+      if (current === "activities") return state.formData.activities.length > 0;
+      return true;
+    }
+
+    function nextStep() {
+      state.step = Math.min(state.step + 1, questionOrder.length - 1);
+      render();
+    }
+
+    function prevStep() {
+      state.step = Math.max(state.step - 1, 0);
+      render();
+    }
+
+    function resetAll() {
+      state.mode = "survey";
+      state.step = 0;
+      state.formData = structuredClone(initialData);
+      state.plannerDays = Array.from({ length: initialData.days }, () => createEmptyDayPlan());
+      state.librarySearch = "";
+      state.packingList = buildPackingList(initialData.destination, initialData.activities, initialData.days);
+      render();
+    }
+
+    function goToPlanner() {
+      state.mode = "planner";
+      state.plannerDays = Array.from({ length: state.formData.days }, () => createEmptyDayPlan());
+      state.packingList = buildPackingList(selectedDestination(), state.formData.activities, state.formData.days);
+      render();
+    }
+
+    function goToDashboard() {
+      state.mode = "dashboard";
+      render();
+    }
+
+    function addDay() {
+      state.plannerDays.push(createEmptyDayPlan());
+      state.formData.days += 1;
+      render();
+    }
+
+    function removeDay() {
+      if (state.plannerDays.length > 1) {
+        state.plannerDays.pop();
+        state.formData.days = Math.max(1, state.formData.days - 1);
+        render();
+      }
+    }
+
+    function updateGroupCount(field, delta) {
+      state.formData[field] = clampCount(state.formData[field] + delta);
+      render();
+    }
+
+    function toggleActivity(id) {
+      if (state.formData.activities.includes(id)) {
+        state.formData.activities = state.formData.activities.filter(item => item !== id);
+      } else {
+        state.formData.activities.push(id);
+      }
+      render();
+    }
+
+    function addCardToSlot(dayIndex, card) {
+      const plannerCard = {
+        id: `${card.id}-${dayIndex}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        title: card.title,
+        slot: card.slot,
+        duration: card.duration,
+        tags: [...card.tags],
+      };
+      state.plannerDays[dayIndex][card.slot].push(plannerCard);
+      render();
+    }
+
+    function deleteCard(dayIndex, slot, cardId) {
+      state.plannerDays[dayIndex][slot] = state.plannerDays[dayIndex][slot].filter(item => item.id !== cardId);
+      render();
+    }
+
+    function updateCardDuration(dayIndex, slot, cardId, change) {
+      state.plannerDays[dayIndex][slot] = state.plannerDays[dayIndex][slot].map(item =>
+        item.id === cardId ? { ...item, duration: Math.max(5, item.duration + change) } : item
+      );
+      render();
+    }
+
+    function autoBuildDay(dayIndex) {
+      const newDay = createEmptyDayPlan();
+      plannerSlots.forEach(({ key }) => {
+        const match = finalLibrary().find(card => card.slot === key);
+        if (match) {
+          newDay[key].push({
+            id: `${match.id}-${dayIndex}-${Date.now()}-${key}`,
+            title: match.title,
+            slot: match.slot,
+            duration: match.duration,
+            tags: [...match.tags],
+          });
+        }
+      });
+      state.plannerDays[dayIndex] = newDay;
+      render();
+    }
+
+    function togglePacked(id) {
+      state.packingList = state.packingList.map(item => item.id === id ? { ...item, packed: !item.packed } : item);
+      render();
+    }
+
+    function getRecommendations(card) {
+      const destination = selectedDestination();
+      const lower = card.title.toLowerCase();
+      if (lower.includes("breakfast") || lower.includes("cafe") || lower.includes("bakery")) {
+        return [`Best breakfast cafes in ${destination}`, `${destination} brunch spots`, `Top local bakery breakfast in ${destination}`];
+      }
+      if (lower.includes("museum") || lower.includes("gallery") || lower.includes("history")) {
+        return [`Top museums in ${destination}`, `Family friendly museums in ${destination}`, `Historic sites in ${destination}`];
+      }
+      if (lower.includes("food") || lower.includes("dinner") || lower.includes("ramen") || lower.includes("dessert")) {
+        return [`Best food spots in ${destination}`, `Popular restaurants in ${destination}`, `Street food in ${destination}`];
+      }
+      if (lower.includes("nature") || lower.includes("walk") || lower.includes("viewpoint") || lower.includes("beach")) {
+        return [`Best nature spots in ${destination}`, `Scenic walks in ${destination}`, `Beautiful viewpoints in ${destination}`];
+      }
+      if (lower.includes("train") || lower.includes("drive") || lower.includes("ferry") || lower.includes("boat")) {
+        return [`Best travel routes in ${destination}`, `How to get around ${destination}`, `Transport highlights in ${destination}`];
+      }
+      return [`Things to do in ${destination}`, `Top attractions in ${destination}`, `Family activities in ${destination}`];
+    }
+
+    function renderSurveyStep() {
+      const current = questionOrder[state.step];
+      const content = document.getElementById("surveyContent");
+      if (!content) return;
+      const totalTravelers = state.formData.adults + state.formData.children + state.formData.teenagers;
+
+      if (current === "destination") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>Where do you want to go?</h1>
+          <p>Choose a destination to start the adventure.</p>
+          <div class="option-grid">
+            ${destinationOptions.map(place => `<button class="option-card ${state.formData.destination === place ? "selected" : ""}" data-destination="${place}">${place}</button>`).join("")}
+          </div>
+          ${state.formData.destination === "Custom" ? `<div style="margin-top:16px"><input id="customDestinationInput" type="text" placeholder="Type your destination" value="${escapeHtml(state.formData.customDestination)}"></div>` : ""}
+        `;
+        content.querySelectorAll("[data-destination]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            state.formData.destination = btn.getAttribute("data-destination");
+            render();
+          });
+        });
+        const customInput = document.getElementById("customDestinationInput");
+        if (customInput) customInput.addEventListener("input", e => {
+          state.formData.customDestination = e.target.value;
+        });
+        return;
+      }
+
+      if (current === "days") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>How many days is your trip?</h1>
+          <p>Set the length of the holiday.</p>
+          <div class="card">
+            <div style="font-size:42px;font-weight:800;margin-bottom:14px">${state.formData.days} days</div>
+            <div class="slider-wrap"><input id="daysRange" type="range" min="1" max="30" value="${state.formData.days}"></div>
+          </div>
+        `;
+        document.getElementById("daysRange").addEventListener("input", e => {
+          state.formData.days = Number(e.target.value);
+          render();
+        });
+        return;
+      }
+
+      if (current === "budget") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>What is your budget?</h1>
+          <p>A rough number is enough.</p>
+          <div class="card">
+            <div style="font-size:42px;font-weight:800;margin-bottom:14px">$${state.formData.budget}</div>
+            <div class="slider-wrap"><input id="budgetRange" type="range" min="500" max="15000" step="100" value="${state.formData.budget}"></div>
+          </div>
+        `;
+        document.getElementById("budgetRange").addEventListener("input", e => {
+          state.formData.budget = Number(e.target.value);
+          render();
+        });
+        return;
+      }
+
+      if (current === "group") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>Who is going on the trip?</h1>
+          <p>This helps shape the pace and activities.</p>
+          <div class="grid-3">
+            ${["adults","children","teenagers"].map(field => `
+              <div class="card count-card">
+                <div class="muted">${toTitleCase(field)}</div>
+                <div class="count-value">${state.formData[field]}</div>
+                <div class="toolbar" style="justify-content:center">
+                  <button class="btn ghost small" data-dec="${field}">-</button>
+                  <button class="btn primary small" data-inc="${field}">+</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        content.querySelectorAll("[data-dec]").forEach(btn => btn.addEventListener("click", () => updateGroupCount(btn.dataset.dec, -1)));
+        content.querySelectorAll("[data-inc]").forEach(btn => btn.addEventListener("click", () => updateGroupCount(btn.dataset.inc, 1)));
+        return;
+      }
+
+      if (current === "activities") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>What kind of things do you want to do?</h1>
+          <p>Pick all the travel ingredients you want in the mix.</p>
+          <div style="display:grid;gap:20px">
+            ${activityOptions.map(group => `
+              <div>
+                <div style="margin-bottom:10px;color:rgba(255,255,255,.6);font-weight:700">${group.category}</div>
+                <div class="grid-4">
+                  ${group.items.map(activity => `
+                    <button class="activity-btn ${state.formData.activities.includes(activity.id) ? "selected" : ""}" data-activity="${activity.id}">${activity.label}</button>
+                  `).join("")}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        content.querySelectorAll("[data-activity]").forEach(btn => btn.addEventListener("click", () => toggleActivity(btn.dataset.activity)));
+        return;
+      }
+
+      if (current === "vibe") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>What kind of holiday vibe do you want?</h1>
+          <p>Choose the overall direction for the trip.</p>
+          <div class="grid-3">
+            ${vibeOptions.map(vibe => `
+              <button class="option-card ${state.formData.vibe === vibe.id ? "selected" : ""}" data-vibe="${vibe.id}">
+                <div style="font-weight:700;margin-bottom:8px">${vibe.title}</div>
+                <div class="muted">${vibe.desc}</div>
+              </button>
+            `).join("")}
+          </div>
+        `;
+        content.querySelectorAll("[data-vibe]").forEach(btn => btn.addEventListener("click", () => {
+          state.formData.vibe = btn.dataset.vibe;
+          render();
+        }));
+        return;
+      }
+
+      if (current === "intensity") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>How intense should each day feel?</h1>
+          <p>From easy strolling to packed days.</p>
+          <div class="card">
+            <div style="font-size:42px;font-weight:800;margin-bottom:14px">${state.formData.intensity}%</div>
+            <div class="slider-wrap"><input id="intensityRange" type="range" min="0" max="100" step="5" value="${state.formData.intensity}"></div>
+          </div>
+        `;
+        document.getElementById("intensityRange").addEventListener("input", e => {
+          state.formData.intensity = Number(e.target.value);
+          render();
+        });
+        return;
+      }
+
+      if (current === "notes") {
+        content.innerHTML = `
+          <div class="section-kicker">Holiday Planner</div>
+          <h1>Any extra notes or must haves?</h1>
+          <p>This can later feed into highlights, packing lists, and ideas.</p>
+          <textarea id="notesInput" placeholder="Tell me any extra ideas for the trip...">${escapeHtml(state.formData.notes)}</textarea>
+        `;
+        document.getElementById("notesInput").addEventListener("input", e => {
+          state.formData.notes = e.target.value;
+        });
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="section-kicker">Holiday Planner</div>
+        <h1>Your holiday survey summary</h1>
+        <p>This now flows into the planner and dashboard.</p>
+        <div class="card">
+          <div class="toolbar" style="margin-bottom:14px">
+            <div class="badge">Destination: ${selectedDestination()}</div>
+            <div class="badge">Days: ${state.formData.days}</div>
+            <div class="badge">Budget: $${state.formData.budget}</div>
+            <div class="badge">Travelers: ${totalTravelers}</div>
+          </div>
+          <div class="summary-box">${summaryText()}</div>
+          <div style="margin-top:16px" class="muted">Selected activities: ${selectedActivityLabels() || "None selected yet."}</div>
+        </div>
+      `;
+    }
+
+    function renderPlanner() {
+      const plannerView = document.getElementById("plannerView");
+      const lib = finalLibrary();
+      plannerView.innerHTML = `
+        <div class="section-kicker">Section 2 Planner</div>
+        <h1>Build your days</h1>
+        <p>Add activities into each day, then open the dashboard.</p>
+
+        <div class="toolbar" style="margin-bottom:18px">
+          <button id="plannerBackBtn" class="btn ghost">Back</button>
+          <button id="addDayBtn" class="btn primary">Add Day</button>
+          <button id="removeDayBtn" class="btn ghost">Remove Day</button>
+          <button id="dashboardBtn" class="btn primary">View Dashboard</button>
+        </div>
+
+        <div class="planner-wrap">
+          <div class="card library">
+            <h2>Activities</h2>
+            <p class="soft">Search and add cards to your planner.</p>
+            <input id="librarySearchInput" type="text" placeholder="Search cafes, museums, nature, food..." value="${escapeHtml(state.librarySearch)}">
+            <div class="toolbar" style="margin:12px 0 14px 0">
+              <div class="badge">${lib.length} cards</div>
+              <div class="badge">${selectedDestination()}</div>
+              <div class="badge">${toTitleCase(state.formData.vibe)}</div>
+            </div>
+            <div>
+              ${lib.map(card => `
+                <div class="library-item">
+                  <div style="font-weight:700">${card.title}</div>
+                  <div class="meta">${toTitleCase(card.slot)} • ${card.duration} min</div>
+                  <div class="toolbar" style="margin-top:10px">
+                    <button class="btn primary small" data-add-card="${card.id}">Add to Day 1</button>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="grid-days">
+            ${state.plannerDays.map((day, dayIndex) => {
+              const total = Object.values(day).flat().reduce((sum, item) => sum + item.duration, 0);
+              const load = getDayLoadLabel(total);
+              return `
+                <div class="card">
+                  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+                    <div>
+                      <h2 style="margin-bottom:8px">Day ${dayIndex + 1}</h2>
+                      <div class="toolbar">
+                        <div class="badge">${selectedDestination()}</div>
+                        <div class="badge">${formatMinutes(total)}</div>
+                        <div class="badge">${load.label}</div>
+                      </div>
+                      <div class="soft" style="font-size:13px;margin-top:8px">${load.hint}</div>
+                    </div>
+                    <button class="btn primary small" data-auto-day="${dayIndex}">Auto Build Day</button>
+                  </div>
+
+                  <div class="grid-slots">
+                    ${plannerSlots.map(({ key, label }) => `
+                      <div class="slot">
+                        <div class="slot-title">${label}</div>
+                        <button class="btn ghost small" data-add-random="${dayIndex}|${key}">Add first matching card</button>
+                        ${day[key].length ? day[key].map(card => {
+                          const recs = getRecommendations(card);
+                          return `
+                            <div class="planner-item">
+                              <div class="planner-head">
+                                <div style="font-weight:700">${card.title}</div>
+                                <button class="icon-btn" data-delete-card="${dayIndex}|${key}|${card.id}">✕</button>
+                              </div>
+                              <div class="mini-row">
+                                <button class="btn ghost small" data-minus="${dayIndex}|${key}|${card.id}">-5</button>
+                                <div class="badge">${card.duration} min</div>
+                                <button class="btn ghost small" data-plus="${dayIndex}|${key}|${card.id}">+5</button>
+                              </div>
+                              <a class="link" href="${recommendationLink(recs[0])}" target="_blank" rel="noreferrer">${recs[0]}</a>
+                            </div>
+                          `;
+                        }).join("") : `<div class="empty">Nothing here yet</div>`}
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+
+      document.getElementById("plannerBackBtn").addEventListener("click", () => { state.mode = "survey"; render(); });
+      document.getElementById("addDayBtn").addEventListener("click", addDay);
+      document.getElementById("removeDayBtn").addEventListener("click", removeDay);
+      document.getElementById("dashboardBtn").addEventListener("click", goToDashboard);
+      document.getElementById("librarySearchInput").addEventListener("input", e => { state.librarySearch = e.target.value; render(); });
+
+      plannerView.querySelectorAll("[data-add-card]").forEach(btn => btn.addEventListener("click", () => {
+        const card = librarySeed.find(item => item.id === btn.dataset.addCard);
+        if (card) addCardToSlot(0, card);
+      }));
+
+      plannerView.querySelectorAll("[data-auto-day]").forEach(btn => btn.addEventListener("click", () => autoBuildDay(Number(btn.dataset.autoDay))));
+
+      plannerView.querySelectorAll("[data-add-random]").forEach(btn => btn.addEventListener("click", () => {
+        const [dayIndex, slot] = btn.dataset.addRandom.split("|");
+        const match = finalLibrary().find(card => card.slot === slot);
+        if (match) addCardToSlot(Number(dayIndex), match);
+      }));
+
+      plannerView.querySelectorAll("[data-delete-card]").forEach(btn => btn.addEventListener("click", () => {
+        const [dayIndex, slot, cardId] = btn.dataset.deleteCard.split("|");
+        deleteCard(Number(dayIndex), slot, cardId);
+      }));
+
+      plannerView.querySelectorAll("[data-minus]").forEach(btn => btn.addEventListener("click", () => {
+        const [dayIndex, slot, cardId] = btn.dataset.minus.split("|");
+        updateCardDuration(Number(dayIndex), slot, cardId, -5);
+      }));
+
+      plannerView.querySelectorAll("[data-plus]").forEach(btn => btn.addEventListener("click", () => {
+        const [dayIndex, slot, cardId] = btn.dataset.plus.split("|");
+        updateCardDuration(Number(dayIndex), slot, cardId, 5);
+      }));
+    }
+
+    function renderDashboard() {
+      const dashboardView = document.getElementById("dashboardView");
+      const allPlannedCards = state.plannerDays.flatMap(day => Object.values(day).flat());
+      const totalMinutes = allPlannedCards.reduce((sum, item) => sum + item.duration, 0);
+      const packedCount = state.packingList.filter(item => item.packed).length;
+      const uniqueHighlights = Array.from(new Set(allPlannedCards.map(card => card.title))).slice(0, 8);
+      const totalTravelers = state.formData.adults + state.formData.children + state.formData.teenagers;
+      const topTagsMap = new Map();
+      allPlannedCards.forEach(card => card.tags.forEach(tag => topTagsMap.set(tag, (topTagsMap.get(tag) || 0) + 1)));
+      const topTags = Array.from(topTagsMap.entries()).sort((a,b) => b[1]-a[1]).slice(0,5).map(([tag]) => toTitleCase(tag));
+      const stays = Math.round(state.formData.days * (90 + totalTravelers * 18));
+      const food = Math.round(state.formData.days * totalTravelers * 25);
+      const transport = Math.round(state.formData.days * totalTravelers * 14 + 120);
+      const activities = Math.round(allPlannedCards.reduce((sum, card) => {
+        if (card.tags.includes("adventure")) return sum + 35;
+        if (card.tags.includes("museum") || card.tags.includes("history")) return sum + 18;
+        if (card.tags.includes("food")) return sum + 12;
+        return sum + 10;
+      }, 0));
+      const extras = Math.round(state.formData.budget * 0.1);
+      const total = stays + food + transport + activities + extras;
+
+      dashboardView.innerHTML = `
+        <div class="section-kicker">Section 3 Dashboard</div>
+        <h1>Trip Dashboard</h1>
+        <p>Summary, costs, packing list, highlights, and recommendations.</p>
+
+        <div class="toolbar" style="margin-bottom:18px">
+          <button id="backToPlannerBtn" class="btn ghost">Back to Planner</button>
+          <button id="resetDashBtn" class="btn ghost">Reset</button>
+        </div>
+
+        <div class="grid-4" style="margin-bottom:18px">
+          <div class="card"><div class="soft">Destination</div><div style="font-size:28px;font-weight:800;margin-top:8px">${selectedDestination()}</div></div>
+          <div class="card"><div class="soft">Trip Length</div><div style="font-size:28px;font-weight:800;margin-top:8px">${state.plannerDays.length} days</div></div>
+          <div class="card"><div class="soft">Planned Activities</div><div style="font-size:28px;font-weight:800;margin-top:8px">${allPlannedCards.length}</div></div>
+          <div class="card"><div class="soft">Total Planned Time</div><div style="font-size:28px;font-weight:800;margin-top:8px">${formatMinutes(totalMinutes)}</div></div>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:18px">
+          <div class="card" style="grid-column: span 2;">
+            <h2>Trip Summary</h2>
+            <p>${summaryText()}</p>
+            <div class="toolbar" style="margin-top:14px">${topTags.map(tag => `<div class="badge">${tag}</div>`).join("")}</div>
+          </div>
+          <div class="card">
+            <h2>Highlights</h2>
+            <ul>
+              ${(uniqueHighlights.length ? uniqueHighlights : ["Build a few planner days to generate highlights."]).map(item => `<li>${item}</li>`).join("")}
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <h2>Cost Estimate</h2>
+            <div class="muted">Stays: $${stays}</div>
+            <div class="muted">Food: $${food}</div>
+            <div class="muted">Transport: $${transport}</div>
+            <div class="muted">Activities: $${activities}</div>
+            <div class="muted">Extras: $${extras}</div>
+            <div style="margin-top:10px;font-size:22px;font-weight:800">Estimated total: $${total}</div>
+          </div>
+
+          <div class="card">
+            <h2>Packing List</h2>
+            <div class="muted" style="margin-bottom:10px">${packedCount} / ${state.packingList.length} packed</div>
+            <div class="packing-list">
+              ${state.packingList.map(item => `
+                <label class="packing-row">
+                  <input type="checkbox" data-pack-id="${item.id}" ${item.packed ? "checked" : ""}>
+                  <span>${item.label}</span>
+                  <span class="packing-cat">${item.category}</span>
+                </label>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Recommendations</h2>
+            <div style="display:grid;gap:10px">
+              <a class="link" href="${recommendationLink(`Best family activities in ${selectedDestination()}`)}" target="_blank" rel="noreferrer">Best family activities in ${selectedDestination()}</a>
+              <a class="link" href="${recommendationLink(`Best food in ${selectedDestination()}`)}" target="_blank" rel="noreferrer">Best food in ${selectedDestination()}</a>
+              <a class="link" href="${recommendationLink(`Packing tips for ${selectedDestination()}`)}" target="_blank" rel="noreferrer">Packing tips for ${selectedDestination()}</a>
+              <a class="link" href="${recommendationLink(`Transport guide for ${selectedDestination()}`)}" target="_blank" rel="noreferrer">Transport guide for ${selectedDestination()}</a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("backToPlannerBtn").addEventListener("click", () => { state.mode = "planner"; render(); });
+      document.getElementById("resetDashBtn").addEventListener("click", resetAll);
+      dashboardView.querySelectorAll("[data-pack-id]").forEach(box => box.addEventListener("change", () => togglePacked(box.dataset.packId)));
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function render() {
+      const surveyView = document.getElementById("surveyView");
+      const plannerView = document.getElementById("plannerView");
+      const dashboardView = document.getElementById("dashboardView");
+      surveyView.classList.toggle("hidden", state.mode !== "survey");
+      plannerView.classList.toggle("hidden", state.mode !== "planner");
+      dashboardView.classList.toggle("hidden", state.mode !== "dashboard");
+
+      const progress = ((state.step + 1) / questionOrder.length) * 100;
+      document.getElementById("progressText").textContent = `Step ${state.step + 1} of ${questionOrder.length}`;
+      document.getElementById("progressPct").textContent = `${Math.round(progress)}%`;
+      document.getElementById("progressBar").style.width = `${progress}%`;
+
+      renderSurveyStep();
+      if (state.mode === "planner") renderPlanner();
+      if (state.mode === "dashboard") renderDashboard();
+
+      const backBtn = document.getElementById("backBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      backBtn.disabled = state.step === 0;
+      nextBtn.disabled = !canContinue();
+      nextBtn.textContent = state.step < questionOrder.length - 1 ? "Next" : "Build My Trip";
+    }
+
+    document.getElementById("backBtn").addEventListener("click", prevStep);
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      if (state.step < questionOrder.length - 1) nextStep();
+      else goToPlanner();
+    });
+    document.getElementById("resetTopBtn").addEventListener("click", resetAll);
+
+    render();
+  </script>
+</body>
+</html>
